@@ -224,8 +224,9 @@ pre:hover .copy{opacity:1}
       <button class="active" data-view="dashboard"><span class="ix">01</span> dashboard</button>
       <button data-view="plan"><span class="ix">02</span> plan_estudio</button>
       <button data-view="lab"><span class="ix">03</span> laboratorio</button>
-      <button data-view="arsenal"><span class="ix">04</span> arsenal</button>
-      <button data-view="recursos"><span class="ix">05</span> recursos</button>
+      <button data-view="osint"><span class="ix">04</span> osint</button>
+      <button data-view="arsenal"><span class="ix">05</span> arsenal</button>
+      <button data-view="recursos"><span class="ix">06</span> recursos</button>
     </nav>
     <div class="side-foot">
       progreso guardado<br>en este dispositivo<br>
@@ -629,9 +630,93 @@ function viewRecursos(){
     <div class="callout"><span class="tag">mejora continua</span>Esta herramienta es la versión 1. A medida que avances, podemos agregar: un sistema de bitácora integrado, flashcards de comandos, retos personalizados, o seguimiento de tus máquinas resueltas en HackTheBox. Cuando quieras evolucionarla, solo dímelo.</div>
   </div>`;
 }
+/* ============ VIEW: OSINT ============ */
+function viewOsint(){
+  return `<div class="view" id="v-osint">
+    <div class="eyebrow">// osint_recon.sh</div>
+    <h1>Métodos <span class="accent">OSINT</span></h1>
+    <p class="lead">OSINT (Open Source Intelligence) es el arte de recolectar información de fuentes públicas y abiertas: buscadores, registros de dominios, redes sociales, metadatos, filtraciones. Es la base del reconocimiento pasivo — recolectas sin tocar el objetivo, así que es la fase más sigilosa y, bien hecha, la más reveladora. Este módulo expande tu Semana 3, Día 1.</p>
+
+    <div class="callout legal"><span class="tag">ética — el límite del OSINT</span>Que la información sea pública no significa que todo uso sea legal o correcto. OSINT se usa para auditorías autorizadas, investigación y proteger tu propia huella digital — <strong>nunca</strong> para acosar, perfilar o vigilar a personas sin consentimiento. En Chile, recopilar y tratar datos personales tiene límites legales (Ley 19.628 y la nueva Ley 21.719 de protección de datos). Practica sobre ti mismo, sobre dominios propios o en retos diseñados para eso.</div>
+
+    <h2>el ciclo osint</h2>
+    <div class="panel">
+      <div class="routine">
+        <div class="slot"><div class="slot-time">01 · Definir</div><div class="slot-body"><div class="st">Qué buscas y por qué</div><div class="sd">Un objetivo claro evita perderte en horas de datos irrelevantes. ¿Dominio? ¿Persona? ¿Empresa? ¿Tu propia exposición?</div></div></div>
+        <div class="slot"><div class="slot-time">02 · Recolectar</div><div class="slot-body"><div class="st">Reunir datos de fuentes abiertas</div><div class="sd">Buscadores, dorks, registros, redes sociales, metadatos, filtraciones. Guarda todo de forma ordenada.</div></div></div>
+        <div class="slot"><div class="slot-time">03 · Procesar</div><div class="slot-body"><div class="st">Filtrar y correlacionar</div><div class="sd">Conecta los puntos: un correo lleva a un usuario, un usuario a un perfil, un perfil a una ubicación.</div></div></div>
+        <div class="slot"><div class="slot-time">04 · Analizar</div><div class="slot-body"><div class="st">Convertir datos en inteligencia</div><div class="sd">¿Qué te dice todo esto? Identifica la superficie de ataque o la huella expuesta.</div></div></div>
+        <div class="slot"><div class="slot-time">05 · Documentar</div><div class="slot-body"><div class="st">Informe reproducible</div><div class="sd">Registra fuentes y hallazgos. Un buen informe OSINT se puede verificar paso a paso.</div></div></div>
+      </div>
+    </div>
+
+    <div class="cat-head">técnica 01 · google dorking</div>
+    <p>El "dorking" usa operadores avanzados de búsqueda para encontrar información que los buscadores indexaron pero que no es obvia: archivos expuestos, paneles de login, documentos con metadatos. Es la técnica OSINT más accesible y no requiere instalar nada.</p>
+    ${code(`site:ejemplo.com            # solo resultados de ese dominio
+filetype:pdf site:ejemplo.com  # documentos PDF en ese dominio
+intitle:"index of"          # listados de directorios abiertos
+inurl:admin                 # URLs que contengan "admin"
+intext:"contraseña"         # páginas que mencionen esa palabra
+"frase exacta"              # busca la frase literal
+ejemplo.com -www            # excluye un término con el guion
+cache:ejemplo.com           # versión cacheada por Google`)}
+    <div class="callout tip"><span class="tag">recurso</span>La <a href="https://www.exploit-db.com/google-hacking-database" target="_blank">Google Hacking Database (GHDB)</a> tiene miles de dorks ya armados por categoría. Úsala solo sobre dominios que tengas autorización de auditar.</div>
+
+    <div class="cat-head">técnica 02 · dominios e infraestructura</div>
+    <p>Mapear todo lo que rodea a un dominio: quién lo registró, qué subdominios tiene, qué servicios expone a internet. Combina herramientas de terminal con servicios web.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">crt.sh</span><span class="tool-cat">web · sin instalación</span></div><div class="tool-desc">Busca certificados SSL públicos de un dominio. Revela subdominios que de otra forma no verías. → <a href="https://crt.sh" target="_blank">crt.sh</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Shodan</span><span class="tool-cat">web + cli</span></div><div class="tool-desc">El "buscador de dispositivos conectados a internet": servidores, cámaras, routers, IoT. Muestra puertos y servicios expuestos sin escanear tú mismo. → <a href="https://shodan.io" target="_blank">shodan.io</a></div>${code(`pipx install shodan
+shodan init TU_API_KEY
+shodan host 1.2.3.4`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Censys</span><span class="tool-cat">web</span></div><div class="tool-desc">Similar a Shodan: inventario de hosts y certificados expuestos en internet. Buena alternativa complementaria. → <a href="https://search.censys.io" target="_blank">search.censys.io</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">amass</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Enumeración de subdominios desde decenas de fuentes pasivas (ya está en tu Arsenal).</div>${code(`amass enum -passive -d ejemplo.com`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">theHarvester</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Recolecta correos, subdominios, hosts y nombres asociados a un dominio desde fuentes públicas. Un clásico del OSINT.</div>${code(`yay -S theharvester
+# o:  pipx install theHarvester
+theHarvester -d ejemplo.com -b all`)}</div>
+
+    <div class="cat-head">técnica 03 · correos y filtraciones</div>
+    <p>Descubrir qué correos están asociados a una organización y si aparecieron en filtraciones de datos. Clave para entender el riesgo de credenciales comprometidas.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Have I Been Pwned</span><span class="tool-cat">web</span></div><div class="tool-desc">Verifica si un correo apareció en filtraciones conocidas. Empieza revisando los tuyos. → <a href="https://haveibeenpwned.com" target="_blank">haveibeenpwned.com</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Hunter.io</span><span class="tool-cat">web</span></div><div class="tool-desc">Encuentra el formato de correos de una empresa (nombre.apellido@) y direcciones públicas asociadas. → <a href="https://hunter.io" target="_blank">hunter.io</a></div></div>
+
+    <div class="cat-head">técnica 04 · identidades y nombres de usuario</div>
+    <p>Una persona suele reutilizar el mismo nombre de usuario en muchas plataformas. Rastrearlo conecta perfiles dispersos en una sola huella.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Sherlock</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Busca un nombre de usuario en cientos de redes sociales y sitios de una sola vez.</div>${code(`yay -S sherlock
+# o:  pipx install sherlock-project
+sherlock nombre_de_usuario`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">WhatsMyName</span><span class="tool-cat">web</span></div><div class="tool-desc">Misma idea que Sherlock pero en navegador, sin instalar nada. → <a href="https://whatsmyname.app" target="_blank">whatsmyname.app</a></div></div>
+
+    <div class="cat-head">técnica 05 · metadatos</div>
+    <p>Las fotos y documentos guardan metadatos ocultos: cámara, fecha, software, y a veces coordenadas GPS. Una imagen subida a internet puede revelar dónde y cuándo se tomó.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">ExifTool</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Lee (y limpia) los metadatos de imágenes y documentos. Úsalo también para proteger tu propia privacidad antes de subir fotos.</div>${code(`sudo pacman -S perl-image-exiftool
+exiftool foto.jpg              # ver todos los metadatos
+exiftool -gps:all foto.jpg     # solo coordenadas GPS
+exiftool -all= foto.jpg        # borrar todos los metadatos`)}</div>
+
+    <div class="cat-head">técnica 06 · frameworks todo-en-uno</div>
+    <p>Cuando ya dominas las herramientas sueltas, estos frameworks automatizan y correlacionan todo el proceso en una sola interfaz.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">SpiderFoot</span><span class="tool-cat">terminal + web</span></div><div class="tool-desc">Automatiza más de 200 módulos OSINT desde un dominio, IP, correo o nombre. Interfaz web propia. Ideal para empezar con frameworks.</div>${code(`yay -S spiderfoot
+spiderfoot -l 127.0.0.1:5001
+# abre http://127.0.0.1:5001`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Recon-ng</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Framework modular estilo Metasploit pero para reconocimiento. Organiza resultados en una base de datos.</div>${code(`yay -S recon-ng
+recon-ng`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Maltego</span><span class="tool-cat">gui</span></div><div class="tool-desc">Visualiza relaciones (persona → correo → dominio → IP) en gráficos interactivos. La versión Community es gratuita. → <a href="https://maltego.com" target="_blank">maltego.com</a></div>${code(`yay -S maltego`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">OSINT Framework</span><span class="tool-cat">web · directorio</span></div><div class="tool-desc">No es una herramienta sino un mapa enorme de recursos OSINT organizados por tipo de dato. Tu punto de partida cuando no sepas qué usar. → <a href="https://osintframework.com" target="_blank">osintframework.com</a></div></div>
+
+    <h2>cómo practicar (legalmente)</h2>
+    <div class="panel">
+      <p><strong>Empieza por ti mismo.</strong> Búscate en Have I Been Pwned, corre Sherlock con tus propios usuarios, revisa qué metadatos tienen tus fotos. Es la forma más reveladora — y más segura — de entender el poder del OSINT, y de paso reduces tu propia huella.</p>
+      <p><strong>Usa dominios propios o de práctica.</strong> Aplica theHarvester y amass sobre un dominio tuyo o sobre los que se permiten en retos.</p>
+      <p><strong>Retos OSINT.</strong> TryHackMe tiene salas dedicadas (busca "OSINT"), y existen CTFs de OSINT como los de <a href="https://www.tracelabs.org" target="_blank">TraceLabs</a>, que además se usan para causas reales (personas desaparecidas) de forma ética y supervisada.</p>
+    </div>
+
+    <div class="callout"><span class="tag">conexión con el plan</span>Este módulo potencia la <strong>Semana 3 (Reconocimiento)</strong>. El día que llegues a recon pasivo, vuelve aquí y practica al menos dos técnicas distintas sobre un objetivo de tu laboratorio.</div>
+  </div>`;
+}
+
 /* ============ APP CONTROLLER ============ */
-const VIEWS = {dashboard:viewDashboard, plan:viewPlan, lab:viewLab, arsenal:viewArsenal, recursos:viewRecursos};
-const PROMPTS = {dashboard:'cat plan.md',plan:'./plan_estudio.sh',lab:'vim laboratorio.conf',arsenal:'ls arsenal/',recursos:'cat recursos.md'};
+const VIEWS = {dashboard:viewDashboard, plan:viewPlan, lab:viewLab, osint:viewOsint, arsenal:viewArsenal, recursos:viewRecursos};
+const PROMPTS = {dashboard:'cat plan.md',plan:'./plan_estudio.sh',lab:'vim laboratorio.conf',osint:'./osint_recon.sh --target',arsenal:'ls arsenal/',recursos:'cat recursos.md'};
 
 function render(){
   document.getElementById('views').innerHTML = Object.keys(VIEWS).map(k=>VIEWS[k]()).join('');
