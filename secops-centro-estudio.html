@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>secOps // centro de estudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080B0C;
+  --panel:#0E1416;
+  --panel-2:#121A1D;
+  --line:#1C2A2E;
+  --line-2:#284047;
+  --green:#3DF07A;
+  --green-dim:#1E8F4A;
+  --cyan:#2CD4E6;
+  --amber:#F5B642;
+  --red:#FF5C5C;
+  --txt:#C7D6D4;
+  --txt-dim:#6E8480;
+  --txt-faint:#42534F;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.13) 0px,rgba(0,0,0,0.13) 1px,transparent 1px,transparent 3px);
+  opacity:.35;
+}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:var(--green-dim);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:var(--green-dim)}
+
+/* ===== layout ===== */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.sidebar{
+  background:var(--panel);border-right:1px solid var(--line);
+  position:sticky;top:0;height:100vh;overflow-y:auto;padding:18px 0;
+  display:flex;flex-direction:column;
+}
+.brand{padding:0 18px 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand .logo{font-family:var(--mono);font-size:13px;color:var(--green);font-weight:700;letter-spacing:.5px}
+.brand .logo .blink{animation:blink 1.1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.brand .sub{font-family:var(--mono);font-size:10px;color:var(--txt-dim);margin-top:5px;letter-spacing:.5px}
+.nav{flex:1;padding:0 10px}
+.nav button{
+  width:100%;text-align:left;background:none;border:none;color:var(--txt-dim);
+  font-family:var(--mono);font-size:12.5px;padding:9px 10px;cursor:pointer;
+  display:flex;align-items:center;gap:9px;border-radius:3px;transition:.15s;letter-spacing:.3px;
+}
+.nav button:hover{color:var(--txt);background:var(--panel-2)}
+.nav button.active{color:var(--green);background:var(--panel-2);box-shadow:inset 2px 0 0 var(--green)}
+.nav button .ix{color:var(--txt-faint);font-size:11px}
+.nav button.active .ix{color:var(--green-dim)}
+.side-foot{padding:14px 18px 4px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--txt-faint);line-height:1.6}
+
+.main{padding:0;max-width:100%;overflow-x:hidden}
+.topbar{
+  background:var(--bg);border-bottom:1px solid var(--line);
+  padding:14px 32px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;backdrop-filter:blur(6px);
+}
+.topbar .prompt{font-family:var(--mono);font-size:13px;color:var(--txt-dim)}
+.topbar .prompt b{color:var(--green);font-weight:500}
+.topbar .prompt .path{color:var(--cyan)}
+.progress-mini{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--txt-dim)}
+.bar{width:120px;height:6px;background:var(--line);border-radius:0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);width:0%;transition:width .4s}
+
+.view{padding:32px;max-width:1000px;margin:0 auto;display:none;animation:fade .3s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+h1{font-family:var(--mono);font-size:24px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+h1 .accent{color:var(--green)}
+.lead{color:var(--txt-dim);font-size:14px;margin-bottom:28px;max-width:680px}
+h2{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--green);margin:32px 0 14px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+h2::before{content:"##";color:var(--txt-faint);font-weight:400}
+h3{font-family:var(--mono);font-size:13.5px;font-weight:500;color:var(--cyan);margin:20px 0 10px}
+p{margin-bottom:12px}
+strong{color:#fff;font-weight:600}
+.eyebrow{font-family:var(--mono);font-size:11px;color:var(--green-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+
+/* ===== cards / panels ===== */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:16px}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px}
+.stat .k{font-family:var(--mono);font-size:11px;color:var(--txt-dim);letter-spacing:.5px;text-transform:uppercase}
+.stat .v{font-family:var(--mono);font-size:28px;color:var(--green);font-weight:700;margin-top:6px;line-height:1}
+.stat .v small{font-size:13px;color:var(--txt-dim);font-weight:400}
+
+.callout{border-left:2px solid var(--amber);background:rgba(245,182,66,.05);padding:14px 16px;border-radius:0 4px 4px 0;margin:16px 0;font-size:13.5px}
+.callout.legal{border-color:var(--red);background:rgba(255,92,92,.05)}
+.callout.tip{border-color:var(--cyan);background:rgba(44,212,230,.05)}
+.callout .tag{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:4px}
+.callout.legal .tag{color:var(--red)}
+.callout.tip .tag{color:var(--cyan)}
+
+/* ===== code ===== */
+code{font-family:var(--mono);font-size:12.5px;background:var(--panel-2);color:var(--green);padding:2px 6px;border-radius:3px;border:1px solid var(--line)}
+pre{background:#0A1012;border:1px solid var(--line);border-radius:4px;padding:14px 16px;overflow-x:auto;margin:12px 0;position:relative}
+pre code{background:none;border:none;padding:0;color:var(--txt);font-size:12.5px;line-height:1.7;display:block;white-space:pre}
+pre .cmt{color:var(--txt-faint)}
+pre .cmd{color:var(--green)}
+.copy{position:absolute;top:8px;right:8px;background:var(--panel-2);border:1px solid var(--line);color:var(--txt-dim);font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;cursor:pointer;opacity:0;transition:.15s}
+pre:hover .copy{opacity:1}
+.copy:hover{color:var(--green);border-color:var(--green-dim)}
+.copy.done{color:var(--green)}
+
+/* ===== weeks ===== */
+.week{background:var(--panel);border:1px solid var(--line);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.week-head{padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:.15s}
+.week-head:hover{background:var(--panel-2)}
+.week-num{font-family:var(--mono);font-size:11px;color:var(--bg);background:var(--green-dim);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:3px;font-weight:700;flex-shrink:0}
+.week.done .week-num{background:var(--green)}
+.week-meta{flex:1;min-width:0}
+.week-meta .t{font-family:var(--mono);font-size:14px;color:#fff;font-weight:500}
+.week-meta .g{font-size:12px;color:var(--txt-dim);margin-top:2px}
+.week-prog{font-family:var(--mono);font-size:11px;color:var(--txt-dim);flex-shrink:0}
+.week-chev{color:var(--txt-faint);transition:.2s;flex-shrink:0;font-family:var(--mono)}
+.week.open .week-chev{transform:rotate(90deg);color:var(--green)}
+.week-body{display:none;border-top:1px solid var(--line);padding:6px 18px 14px}
+.week.open .week-body{display:block}
+.day{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.day:last-child{border-bottom:none}
+.day-check{flex-shrink:0;margin-top:2px}
+.day-check input{appearance:none;width:18px;height:18px;border:1px solid var(--line-2);border-radius:3px;cursor:pointer;position:relative;background:var(--bg);transition:.15s}
+.day-check input:checked{background:var(--green-dim);border-color:var(--green)}
+.day-check input:checked::after{content:"✓";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.day-content{flex:1}
+.day-label{font-family:var(--mono);font-size:11px;color:var(--green-dim);letter-spacing:.5px}
+.day-title{font-size:13.5px;color:var(--txt);font-weight:500;margin:1px 0 3px}
+.day.checked .day-title{color:var(--txt-dim);text-decoration:line-through}
+.day-desc{font-size:12.5px;color:var(--txt-dim)}
+.day-tags{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid var(--line-2);color:var(--txt-dim)}
+.pill.read{color:var(--cyan);border-color:rgba(44,212,230,.3)}
+.pill.lab{color:var(--green);border-color:var(--green-dim)}
+.pill.ctf{color:var(--amber);border-color:rgba(245,182,66,.3)}
+
+/* ===== arsenal table ===== */
+.tool{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:16px 18px;margin-bottom:10px}
+.tool-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.tool-name{font-family:var(--mono);font-size:14px;color:var(--green);font-weight:700}
+.tool-cat{font-family:var(--mono);font-size:10px;color:var(--txt-faint);letter-spacing:.5px;text-transform:uppercase}
+.tool-desc{font-size:13px;color:var(--txt-dim);margin-bottom:8px}
+
+/* ===== timeline (daily routine) ===== */
+.routine{display:flex;flex-direction:column;gap:0}
+.slot{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.slot:last-child{border-bottom:none}
+.slot-time{font-family:var(--mono);font-size:11px;color:var(--green);width:90px;flex-shrink:0;padding-top:2px}
+.slot-body .st{font-size:13.5px;color:var(--txt);font-weight:500}
+.slot-body .sd{font-size:12.5px;color:var(--txt-dim)}
+
+.cat-head{font-family:var(--mono);font-size:11px;color:var(--green-dim);letter-spacing:1px;text-transform:uppercase;margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+
+.reset-btn{background:none;border:1px solid var(--line-2);color:var(--txt-dim);font-family:var(--mono);font-size:11px;padding:7px 14px;border-radius:3px;cursor:pointer;transition:.15s}
+.reset-btn:hover{color:var(--red);border-color:var(--red)}
+
+.boot{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:var(--green);transition:opacity .5s}
+.boot.gone{opacity:0;pointer-events:none}
+.boot-inner{width:90%;max-width:480px}
+.boot-line{opacity:0;margin-bottom:4px}
+.boot-line.show{opacity:1}
+.boot-line .ok{color:var(--green)}
+.boot-line .dim{color:var(--txt-dim)}
+
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:-240px;width:240px;z-index:200;transition:left .25s;box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .sidebar.show{left:0}
+  .menu-btn{display:flex!important}
+  .view{padding:20px 16px}
+  .topbar{padding:12px 16px}
+  .topbar .prompt{font-size:11px}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .progress-mini .bar{width:80px}
+  h1{font-size:20px}
+}
+.menu-btn{display:none;background:none;border:1px solid var(--line-2);color:var(--green);font-family:var(--mono);font-size:16px;width:34px;height:34px;border-radius:3px;cursor:pointer;align-items:center;justify-content:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150}
+.overlay.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- boot sequence -->
+<div class="boot" id="boot">
+  <div class="boot-inner" id="bootInner"></div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="app">
+  <!-- sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">secOps<span class="blink">_</span></div>
+      <div class="sub">daniel // ruta de 8 semanas</div>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="active" data-view="dashboard"><span class="ix">01</span> dashboard</button>
+      <button data-view="plan"><span class="ix">02</span> plan_estudio</button>
+      <button data-view="lab"><span class="ix">03</span> laboratorio</button>
+      <button data-view="osint"><span class="ix">04</span> osint</button>
+      <button data-view="arsenal"><span class="ix">05</span> arsenal</button>
+      <button data-view="recursos"><span class="ix">06</span> recursos</button>
+    </nav>
+    <div class="side-foot">
+      progreso guardado<br>en este dispositivo<br>
+      <span style="color:var(--green-dim)">●</span> sistema activo
+    </div>
+  </aside>
+
+  <!-- main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="menu-btn" onclick="toggleMenu()">≡</button>
+        <div class="prompt"><b>root@daniel</b>:<span class="path">~/ciberseguridad</span># <span id="promptTail">cat plan.md</span></div>
+      </div>
+      <div class="progress-mini">
+        <span id="progTxt">0%</span>
+        <div class="bar"><i id="progBar"></i></div>
+      </div>
+    </div>
+
+    <!-- VIEWS get injected here -->
+    <div id="views"></div>
+  </div>
+</div>
+
+<script>
+/* ============ CURRICULUM DATA ============ */
+const WEEKS = [
+{
+  n:1, t:"Fundamentos: Linux + Laboratorio",
+  g:"Dominar la terminal y montar tu campo de prácticas.",
+  days:[
+    {l:"Día 1 — Setup",ti:"Montar el laboratorio",d:"Instala virt-manager/KVM, crea tu primer snapshot. Lee la sección Laboratorio completa antes de tocar nada.",tags:["lab"]},
+    {l:"Día 2 — Filesystem",ti:"Sistema de archivos y permisos",d:"Jerarquía de Linux (/etc, /var, /home), rutas absolutas vs relativas, chmod y chown. Practica creando y moviendo archivos.",tags:["read","lab"]},
+    {l:"Día 3 — Terminal",ti:"Pipes, redirección y filtros",d:"Aprende | (pipe), > y >> (redirección), grep, find, awk básico. Encadena comandos para resolver tareas reales.",tags:["read","lab"]},
+    {l:"Día 4 — Bash",ti:"Tu primer script",d:"Variables, condicionales (if), bucles (for). Escribe un script que automatice algo simple (ej. listar puertos abiertos).",tags:["read","lab"]},
+    {l:"Día 5 — Sistema",ti:"Procesos, usuarios y servicios",d:"ps, top, systemctl, sudo, gestión de usuarios. Entiende qué corre en tu máquina y cómo controlarlo.",tags:["read","lab"]},
+    {l:"Día 6 — Práctica",ti:"OverTheWire: Bandit (niveles 0-12)",d:"El mejor wargame para fijar la terminal. Cada nivel es un puzzle que se resuelve con comandos. Empieza aquí: overthewire.org/wargames/bandit",tags:["ctf"]},
+    {l:"Día 7 — Repaso",ti:"Consolidar semana 1",d:"Repasa tus notas, repite los comandos que olvidaste, completa Bandit hasta donde llegaste. Sin esta base, nada de lo demás funciona.",tags:["read"]}
+  ]
+},
+{
+  n:2, t:"Redes desde cero",
+  g:"Entender cómo viaja la información antes de interceptarla.",
+  days:[
+    {l:"Día 1 — Teoría",ti:"Modelo TCP/IP, IPs y puertos",d:"Qué es una dirección IP, qué es un puerto, los protocolos clave (TCP, UDP, HTTP, DNS). La base conceptual de todo lo demás.",tags:["read"]},
+    {l:"Día 2 — Comandos",ti:"Herramientas de red en Linux",d:"ip a, ss -tulpn, ping, traceroute, dig. Diagnostica tu propia red — esto es exactamente tu trabajo de OSS.",tags:["read","lab"]},
+    {l:"Día 3 — tcpdump",ti:"Captura de tráfico en terminal",d:"Captura paquetes en vivo, filtra por puerto y host, guarda en .pcap. Ligero y perfecto para servidores sin GUI.",tags:["read","lab"]},
+    {l:"Día 4 — Wireshark",ti:"Análisis visual de paquetes",d:"Abre tus capturas, usa filtros (http, ip.addr), 'Follow TCP Stream'. Mira una petición real byte por byte.",tags:["read","lab"]},
+    {l:"Día 5 — HTTP vs HTTPS",ti:"Por qué existe el cifrado",d:"Captura tráfico HTTP (texto plano) y HTTPS (cifrado) y compáralos. Una de las lecciones más reveladoras del curso.",tags:["lab"]},
+    {l:"Día 6 — Práctica",ti:"Analiza tu propio tráfico",d:"Navega normalmente mientras capturas. Identifica qué protocolos usas, a qué servidores te conectas, qué se ve y qué no.",tags:["lab"]},
+    {l:"Día 7 — Repaso",ti:"TryHackMe: Network Fundamentals",d:"Refuerza con la ruta 'Pre Security' de TryHackMe — salas guiadas y gratuitas sobre redes.",tags:["ctf"]}
+  ]
+},
+{
+  n:3, t:"Reconocimiento",
+  g:"Recolectar información de un objetivo: la primera fase real de un pentest.",
+  days:[
+    {l:"Día 1 — OSINT",ti:"Reconocimiento pasivo",d:"whois, dig, búsqueda en fuentes públicas. Información que se obtiene sin tocar el objetivo — legal y silenciosa.",tags:["read","lab"]},
+    {l:"Día 2 — amass",ti:"Enumeración de subdominios",d:"Descubre la superficie de ataque oculta de un dominio (vpn., dev., mail.) combinando fuentes pasivas.",tags:["read","lab"]},
+    {l:"Día 3 — nmap I",ti:"Descubrimiento y escaneo básico",d:"nmap -sn (qué hosts viven), escaneo de puertos comunes. La herramienta más icónica de la ciberseguridad.",tags:["read","lab"]},
+    {l:"Día 4 — nmap II",ti:"Detección de versiones y scripts",d:"-sV (versiones), -A (agresivo), scripts NSE. Saca toda la información posible de un objetivo.",tags:["read","lab"]},
+    {l:"Día 5 — Objetivo",ti:"Montar Metasploitable2",d:"Levanta tu primera máquina vulnerable de práctica y escanéala completa con nmap. Documenta cada puerto abierto.",tags:["lab"]},
+    {l:"Día 6 — Práctica",ti:"Recon completo de tu lab",d:"Mapea toda tu red de laboratorio como si fuera un objetivo real. Crea un informe de hallazgos en tu bitácora.",tags:["lab"]},
+    {l:"Día 7 — Repaso",ti:"TryHackMe: sala de Nmap",d:"La sala 'Nmap' de TryHackMe consolida todo con ejercicios prácticos calificados.",tags:["ctf"]}
+  ]
+},
+{
+  n:4, t:"Pentesting Web",
+  g:"Auditar aplicaciones web — donde está la mayoría de las vulnerabilidades reales.",
+  days:[
+    {l:"Día 1 — Teoría",ti:"Cómo funciona la web",d:"Request/response, métodos (GET, POST), códigos de estado, cookies y sesiones. Entiende el modelo antes de romperlo.",tags:["read"]},
+    {l:"Día 2 — DVWA + gobuster",ti:"Descubrir contenido oculto",d:"Monta DVWA en Docker. Usa gobuster para encontrar rutas y archivos no enlazados con un diccionario.",tags:["read","lab"]},
+    {l:"Día 3 — nikto",ti:"Escaneo de vulnerabilidades web",d:"Pasa nikto contra DVWA. Identifica configuraciones erróneas, software viejo y archivos peligrosos.",tags:["read","lab"]},
+    {l:"Día 4 — Burp I",ti:"Configurar el proxy interceptor",d:"Instala el certificado CA de Burp, configura el navegador, intercepta tu primera petición HTTPS.",tags:["read","lab"]},
+    {l:"Día 5 — Burp II",ti:"Repeater e Intruder",d:"Modifica y repite peticiones (Repeater), automatiza fuerza bruta sobre un login (Intruder) en DVWA.",tags:["lab"]},
+    {l:"Día 6 — OWASP",ti:"Top 10 + DVWA nivel low",d:"Conoce el OWASP Top 10 (las vulnerabilidades web más comunes) y explota las de DVWA en dificultad baja.",tags:["read","lab"]},
+    {l:"Día 7 — Repaso",ti:"TryHackMe: OWASP Top 10",d:"La sala 'OWASP Top 10' te hace explotar cada categoría de forma guiada.",tags:["ctf"]}
+  ]
+},
+{
+  n:5, t:"Explotación",
+  g:"De encontrar la vulnerabilidad a demostrar que se puede explotar.",
+  days:[
+    {l:"Día 1 — Conceptos",ti:"Exploit, payload, reverse shell",d:"Qué es un CVE, un exploit, un payload, y por qué una reverse shell evade firewalls. Vocabulario esencial.",tags:["read"]},
+    {l:"Día 2 — Metasploit I",ti:"msfconsole: search y use",d:"Navega el framework, busca exploits por nombre/CVE, entiende la estructura de módulos.",tags:["read","lab"]},
+    {l:"Día 3 — Metasploit II",ti:"Tu primer shell",d:"Explota Metasploitable2 con Metasploit y obtén tu primera sesión meterpreter. Momento clave del curso.",tags:["lab"]},
+    {l:"Día 4 — Post-explotación",ti:"Meterpreter básico",d:"Una vez dentro: navegar archivos, capturar info del sistema, entender qué se puede hacer con acceso.",tags:["read","lab"]},
+    {l:"Día 5 — sqlmap",ti:"Inyección SQL automatizada",d:"Usa sqlmap contra el módulo SQLi de DVWA. Extrae bases de datos y entiende por qué la sanitización importa.",tags:["read","lab"]},
+    {l:"Día 6 — Práctica",ti:"TryHackMe: sala de Metasploit",d:"La sala 'Metasploit: Exploitation' guía un ataque completo de principio a fin.",tags:["ctf"]},
+    {l:"Día 7 — Repaso",ti:"Documenta tu primer hackeo completo",d:"Escribe el flujo completo: recon → escaneo → explotación → acceso. Este informe es oro para tu portafolio.",tags:["read"]}
+  ]
+},
+{
+  n:6, t:"Contraseñas",
+  g:"Entender por qué las contraseñas fallan — desde ambos lados.",
+  days:[
+    {l:"Día 1 — Teoría",ti:"Hashing, salting y tipos de hash",d:"Diferencia entre hashing y cifrado, qué es un salt, formatos comunes (MD5, NTLM, bcrypt). Base para todo el cracking.",tags:["read"]},
+    {l:"Día 2 — Hashcat",ti:"Cracking acelerado por GPU",d:"Ataque de diccionario contra hashes de práctica. Aprende los modos -m y -a. Tu GPU integrada AMD sirve vía OpenCL.",tags:["read","lab"]},
+    {l:"Día 3 — John",ti:"John the Ripper + extractores",d:"Crackea hashes con detección automática. Usa zip2john/ssh2john para extraer hashes de archivos protegidos.",tags:["read","lab"]},
+    {l:"Día 4 — Hydra",ti:"Fuerza bruta a servicios en vivo",d:"Audita el SSH de tu propia VM con Hydra. Entiende por qué esto es ruidoso y detectable (clave para el lado defensivo).",tags:["read","lab"]},
+    {l:"Día 5 — Diccionarios",ti:"rockyou, SecLists y reglas",d:"Instala SecLists, conoce rockyou.txt, aprende reglas de mutación. La calidad del diccionario supera a la fuerza bruta.",tags:["read","lab"]},
+    {l:"Día 6 — Práctica",ti:"Reto de cracking + auditoría propia",d:"Crackea un set de hashes de práctica y audita las contraseñas de tu propia VM. ¿Cuánto tardan en caer?",tags:["lab","ctf"]},
+    {l:"Día 7 — Defensa",ti:"Repaso + cómo proteger contraseñas",d:"Cierra con la perspectiva Blue Team: políticas de contraseñas, MFA, por qué bcrypt/argon2 > MD5.",tags:["read"]}
+  ]
+},
+{
+  n:7, t:"Blue Team / Forense Digital",
+  g:"Investigar después del incidente — directamente conectado con tu rol OSS.",
+  days:[
+    {l:"Día 1 — Conceptos",ti:"Forense y cadena de custodia",d:"Por qué nunca se trabaja sobre el original, qué es una imagen forense, hashes de verificación. El principio central.",tags:["read"]},
+    {l:"Día 2 — Autopsy",ti:"Análisis de imágenes de disco",d:"Recupera archivos borrados, reconstruye líneas de tiempo, busca evidencia en una imagen de práctica.",tags:["read","lab"]},
+    {l:"Día 3 — Volatility",ti:"Análisis de memoria RAM",d:"Analiza un volcado de memoria: procesos activos, conexiones de red, malware que nunca tocó el disco.",tags:["read","lab"]},
+    {l:"Día 4 — binwalk",ti:"Análisis de firmware",d:"Diseca el firmware público de un router. Encuentra sistemas de archivos y datos embebidos.",tags:["read","lab"]},
+    {l:"Día 5 — Detección",ti:"Logs y cómo se ve un ataque",d:"Mira tus ataques de semanas anteriores desde el lado defensivo: qué quedó en los logs, cómo detectarlo.",tags:["read","lab"]},
+    {l:"Día 6 — Práctica",ti:"Reto forense (CFReDS / DFIR)",d:"Resuelve un caso forense estandarizado de NIST (cfreds.nist.gov) o un challenge DFIR público.",tags:["ctf"]},
+    {l:"Día 7 — Conexión OSS",ti:"Repaso + tu rol de soporte",d:"Reflexiona: muchas de estas técnicas (análisis de logs, ss, captura de tráfico) ya las usarás en soporte on-site.",tags:["read"]}
+  ]
+},
+{
+  n:8, t:"Ingeniería Inversa + Proyecto Final",
+  g:"Cerrar el ciclo y consolidar todo en un proyecto real.",
+  days:[
+    {l:"Día 1 — Conceptos",ti:"RE: estático vs dinámico",d:"Qué es desensamblar vs descompilar, nociones mínimas de ensamblador, por qué se analiza malware sin ejecutarlo.",tags:["read"]},
+    {l:"Día 2 — Ghidra",ti:"Descompilar con interfaz gráfica",d:"Importa un binario, deja que Ghidra reconstruya pseudo-código C, navega las funciones. La herramienta de la NSA.",tags:["read","lab"]},
+    {l:"Día 3 — radare2",ti:"Análisis desde terminal",d:"Mismo objetivo que Ghidra pero en terminal: afl, pdf @ main, vista de flujo. Ligero y scriptable.",tags:["read","lab"]},
+    {l:"Día 4 — gdb",ti:"Debugging dinámico + crackmes",d:"Pon breakpoints, ejecuta paso a paso, inspecciona memoria. Practica con un reto de crackmes.one.",tags:["read","ctf"]},
+    {l:"Día 5 — WiFi (teoría)",ti:"aircrack-ng conceptual",d:"Estudia la teoría de auditoría WiFi (handshake, modo monitor). Práctica pendiente: requiere un adaptador USB externo.",tags:["read"]},
+    {l:"Día 6 — PROYECTO",ti:"Pentest completo documentado",d:"Pentest end-to-end de Metasploitable: recon, escaneo, explotación, post-explotación, informe profesional. Tu pieza de portafolio.",tags:["lab","ctf"]},
+    {l:"Día 7 — Cierre",ti:"Repaso global + qué sigue",d:"Revisa todo el camino. Define el siguiente paso: certificaciones (eJPT, Security+), CTFs (HackTheBox), o especialización.",tags:["read"]}
+  ]
+}
+];
+/* ============ ARSENAL DATA ============ */
+const ARSENAL = [
+ {cat:"Reconocimiento", tools:[
+   {n:"nmap", d:"Escáner de puertos y servicios. Descubre qué está abierto, qué corre y qué versión.", i:"sudo pacman -S nmap"},
+   {n:"whois", d:"Consulta el registro público de un dominio: dueño, fechas, servidores DNS.", i:"sudo pacman -S whois"},
+   {n:"amass", d:"Enumeración de subdominios desde fuentes pasivas. Mapea la superficie de ataque oculta.", i:"sudo pacman -S amass"}
+ ]},
+ {cat:"Análisis de red", tools:[
+   {n:"ss / iproute2", d:"Conexiones activas y puertos en escucha en tu propia máquina. Reemplazo moderno de netstat.", i:"sudo pacman -S iproute2"},
+   {n:"tcpdump", d:"Captura de tráfico en terminal. Ideal para servidores sin GUI; guarda en .pcap.", i:"sudo pacman -S tcpdump"},
+   {n:"wireshark", d:"Análisis visual de paquetes capa por capa con filtros potentes y seguimiento de conversaciones.", i:"sudo pacman -S wireshark-qt"}
+ ]},
+ {cat:"Pentesting Web", tools:[
+   {n:"gobuster", d:"Fuerza bruta de directorios y archivos web ocultos usando un diccionario.", i:"sudo pacman -S gobuster"},
+   {n:"nikto", d:"Escáner de vulnerabilidades web contra una base de problemas conocidos.", i:"sudo pacman -S nikto"},
+   {n:"Burp Suite", d:"Proxy interceptor: ver y modificar cada petición HTTP. Repeater e Intruder para pruebas manuales.", i:"yay -S burpsuite"}
+ ]},
+ {cat:"Explotación", tools:[
+   {n:"Metasploit", d:"Framework con miles de exploits. Conecta recon con acceso real al sistema.", i:"sudo pacman -S metasploit"},
+   {n:"sqlmap", d:"Detección y explotación automatizada de inyección SQL en aplicaciones web.", i:"sudo pacman -S sqlmap"}
+ ]},
+ {cat:"Contraseñas", tools:[
+   {n:"hashcat", d:"Cracking de hashes acelerado por GPU. Soporta cientos de formatos.", i:"sudo pacman -S hashcat"},
+   {n:"john", d:"John the Ripper: cracking versátil en CPU con detección automática de formato.", i:"sudo pacman -S john"},
+   {n:"hydra", d:"Fuerza bruta a servicios en vivo (SSH, FTP, web). Genera tráfico real — úsalo solo en tu lab.", i:"sudo pacman -S hydra"},
+   {n:"seclists", d:"Colección de diccionarios (incluye rockyou.txt) para todas las herramientas anteriores.", i:"yay -S seclists"}
+ ]},
+ {cat:"Forense digital", tools:[
+   {n:"autopsy", d:"Análisis de imágenes de disco: archivos borrados, líneas de tiempo, búsqueda de evidencia.", i:"yay -S autopsy"},
+   {n:"volatility3", d:"Análisis forense de volcados de memoria RAM: procesos, conexiones, malware en memoria.", i:"yay -S volatility3"},
+   {n:"binwalk", d:"Análisis de firmware y binarios: encuentra archivos embebidos dentro de otros.", i:"sudo pacman -S binwalk"}
+ ]},
+ {cat:"Ingeniería inversa", tools:[
+   {n:"ghidra", d:"Descompilador con GUI (de la NSA). Reconstruye pseudo-código C legible desde un binario.", i:"sudo pacman -S ghidra"},
+   {n:"radare2", d:"Framework de RE en terminal: ligero, scriptable, trabaja a nivel de ensamblador.", i:"sudo pacman -S radare2"},
+   {n:"gdb", d:"Depurador estándar de Linux. Breakpoints y ejecución paso a paso (análisis dinámico).", i:"sudo pacman -S gdb gdb-pwndbg"}
+ ]},
+ {cat:"WiFi (requiere adaptador USB)", tools:[
+   {n:"aircrack-ng", d:"Suite de auditoría WiFi: captura handshakes y crackea claves WPA/WPA2.", i:"sudo pacman -S aircrack-ng"},
+   {n:"kismet", d:"Monitoreo pasivo: detecta redes y dispositivos cercanos sin emitir tráfico.", i:"sudo pacman -S kismet"}
+ ]}
+];
+/* ============ STORAGE (graceful fallback) ============ */
+const mem = {};
+function store(k,v){ try{localStorage.setItem(k,v)}catch(e){mem[k]=v} }
+function recall(k){ try{const x=localStorage.getItem(k);return x===null?(mem[k]??null):x}catch(e){return mem[k]??null} }
+
+/* ============ helpers ============ */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function code(raw){
+  // lines starting with # become comments, $ lines are commands
+  const html = raw.split('\n').map(line=>{
+    if(line.trim().startsWith('#')) return '<span class="cmt">'+esc(line)+'</span>';
+    return esc(line);
+  }).join('\n');
+  return '<pre><button class="copy" onclick="cp(this)">copy</button><code>'+html+'</code></pre>';
+}
+function cp(btn){
+  const t = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(t).then(()=>{btn.textContent='copiado ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='copy';btn.classList.remove('done')},1400)});
+}
+const PILL = {read:'leer',lab:'lab',ctf:'reto'};
+/* ============ VIEW: DASHBOARD ============ */
+function viewDashboard(){
+  const total = WEEKS.reduce((a,w)=>a+w.days.length,0);
+  return `<div class="view active" id="v-dashboard">
+    <div class="eyebrow">// estado del sistema</div>
+    <h1>Hola Daniel. Tu ruta de <span class="accent">8 semanas</span> está lista.</h1>
+    <p class="lead">De principiante a tu primer pentest documentado. 2 horas al día, 60% práctica, 40% teoría. Todo virtualizado en tu ThinkPad — sin comprar nada. Tu progreso se guarda solo en este dispositivo.</p>
+
+    <div class="grid grid-3">
+      <div class="stat"><div class="k">Progreso total</div><div class="v" id="dashPct">0<small>%</small></div></div>
+      <div class="stat"><div class="k">Sesiones hechas</div><div class="v" id="dashDone">0<small>/${total}</small></div></div>
+      <div class="stat"><div class="k">Semana actual</div><div class="v" id="dashWeek">1<small>/8</small></div></div>
+    </div>
+
+    <h2>tu rutina diaria · 2h</h2>
+    <div class="panel">
+      <div class="routine">
+        <div class="slot"><div class="slot-time">08:30–08:40</div><div class="slot-body"><div class="st">Arranque + repaso</div><div class="sd">Abre tu bitácora, repasa los comandos de ayer, enciende el laboratorio.</div></div></div>
+        <div class="slot"><div class="slot-time">08:40–09:25</div><div class="slot-body"><div class="st">Teoría · ~45 min</div><div class="sd">Lee la sección del día. Toma notas con tus propias palabras — no copies, reformula.</div></div></div>
+        <div class="slot"><div class="slot-time">09:25–09:35</div><div class="slot-body"><div class="st">Descanso</div><div class="sd">Levántate, camina con Mila. El cerebro consolida en las pausas.</div></div></div>
+        <div class="slot"><div class="slot-time">09:35–10:25</div><div class="slot-body"><div class="st">Práctica · ~50 min</div><div class="sd">Replica todo en el laboratorio. Romper cosas en tu VM es la mejor forma de aprender.</div></div></div>
+        <div class="slot"><div class="slot-time">10:25–10:30</div><div class="slot-body"><div class="st">Bitácora</div><div class="sd">Anota qué hiciste, qué funcionó y qué no. Marca el día como completado en el Plan.</div></div></div>
+      </div>
+    </div>
+
+    <div class="callout tip"><span class="tag">método</span>La regla de oro de este plan: <strong>nunca leas sin practicar después</strong>. La ciberseguridad no se memoriza, se entrena. Si un comando no lo escribiste tú, no lo sabes todavía.</div>
+
+    <h2>las 8 semanas de un vistazo</h2>
+    <div class="grid grid-2">
+      ${WEEKS.map(w=>`<div class="stat" style="cursor:pointer" onclick="go('plan');setTimeout(()=>openWeek(${w.n}),250)">
+        <div class="k">Semana ${String(w.n).padStart(2,'0')}</div>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--txt);margin-top:6px;font-weight:500">${w.t}</div>
+        <div style="font-size:12px;color:var(--txt-dim);margin-top:4px">${w.g}</div>
+      </div>`).join('')}
+    </div>
+
+    <h2>antes de empezar</h2>
+    <div class="callout legal"><span class="tag">marco legal — léelo una vez, recuérdalo siempre</span>
+    Todo lo que aprendas aquí se practica <strong>exclusivamente en tu propio laboratorio</strong> (tus VMs, máquinas vulnerables hechas para eso, o plataformas como TryHackMe/HackTheBox). Escanear, atacar o capturar tráfico de redes o sistemas ajenos sin autorización escrita es delito en Chile bajo la Ley 21.459 de Delitos Informáticos — con penas de cárcel, no solo multas. La misma herramienta es educación en tu lab y delito fuera de él. La diferencia la haces tú.</div>
+
+    <p style="margin-top:24px"><strong>Primer paso →</strong> ve a <a onclick="go('lab')">Laboratorio</a> y monta tu entorno. Luego abre el <a onclick="go('plan')">Plan</a> y empieza por la Semana 1, Día 1.</p>
+  </div>`;
+}
+/* ============ VIEW: PLAN ============ */
+function viewPlan(){
+  return `<div class="view" id="v-plan">
+    <div class="eyebrow">// plan_estudio.sh</div>
+    <h1>Plan de <span class="accent">8 semanas</span></h1>
+    <p class="lead">Cada día tiene una sesión de 2 horas. Marca el check al terminar — tu progreso se guarda solo. Haz clic en cada semana para desplegar sus días.</p>
+    <div style="margin-bottom:18px"><button class="reset-btn" onclick="resetProgress()">reiniciar progreso</button></div>
+    <div id="weeksWrap">
+      ${WEEKS.map(w=>`
+        <div class="week" id="week-${w.n}">
+          <div class="week-head" onclick="toggleWeek(${w.n})">
+            <div class="week-num">${String(w.n).padStart(2,'0')}</div>
+            <div class="week-meta"><div class="t">${w.t}</div><div class="g">${w.g}</div></div>
+            <div class="week-prog" id="wprog-${w.n}">0/${w.days.length}</div>
+            <div class="week-chev">▸</div>
+          </div>
+          <div class="week-body">
+            ${w.days.map((d,i)=>`
+              <div class="day" id="day-${w.n}-${i}">
+                <div class="day-check"><input type="checkbox" id="chk-${w.n}-${i}" onchange="onCheck(${w.n},${i})"></div>
+                <div class="day-content">
+                  <div class="day-label">${d.l}</div>
+                  <div class="day-title">${d.ti}</div>
+                  <div class="day-desc">${d.d}</div>
+                  <div class="day-tags">${d.tags.map(t=>`<span class="pill ${t}">${PILL[t]}</span>`).join('')}</div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+/* ============ VIEW: LAB ============ */
+function viewLab(){
+  return `<div class="view" id="v-lab">
+    <div class="eyebrow">// laboratorio.conf</div>
+    <h1>Tu <span class="accent">laboratorio</span> de prácticas</h1>
+    <p class="lead">Tu ThinkPad T14 (Ryzen 7 PRO 8840U, 30 GB RAM) es más que suficiente para correr varias máquinas virtuales a la vez. La idea: tu CachyOS es el <strong>atacante</strong>, y dentro de VMs aisladas corren los <strong>objetivos</strong> vulnerables. Todo en una red privada que no toca internet ni tu red real.</p>
+
+    <div class="callout"><span class="tag">arquitectura</span>Atacante = tu CachyOS (con todas las herramientas del Arsenal). Objetivos = VMs vulnerables (Metasploitable) + contenedores Docker (DVWA). Red = <code>host-only</code>, aislada, sin salida a internet. Así nada de lo que hagas puede escapar a tu red doméstica.</div>
+
+    <h2>paso 1 · virtualización con kvm</h2>
+    <p>En Linux, KVM + virt-manager es la mejor opción (más rápido que VirtualBox y nativo del kernel). Instálalo:</p>
+    ${code(`# Instalar KVM, QEMU y la interfaz gráfica virt-manager
+sudo pacman -S qemu-full virt-manager libvirt edk2-ovmf dnsmasq
+
+# Habilitar el servicio de virtualización
+sudo systemctl enable --now libvirtd
+
+# Agregarte al grupo para usar VMs sin sudo
+sudo usermod -aG libvirt $USER
+
+# Verificar que tu CPU soporta virtualización (debe devolver un número > 0)
+grep -c -E 'svm|vmx' /proc/cpuinfo`)}
+    <p>Cierra sesión y vuelve a entrar para que el grupo tome efecto.</p>
+
+    <h2>paso 2 · docker para objetivos rápidos</h2>
+    <p>Docker te permite levantar máquinas vulnerables en segundos, sin instalar nada en tu sistema. Ya lo vimos antes:</p>
+    ${code(`sudo pacman -S docker docker-compose
+sudo systemctl enable --now docker.service
+sudo usermod -aG docker $USER
+# cierra sesión y vuelve a entrar, luego verifica:
+docker run hello-world`)}
+
+    <h2>paso 3 · el primer objetivo: metasploitable2</h2>
+    <p>Metasploitable2 es una máquina Linux <strong>diseñada a propósito</strong> para ser vulnerable. Es tu campo de tiro para las semanas 3 a 8.</p>
+    ${code(`# La forma más simple: vía Docker
+docker pull tleemcjr/metasploitable2
+
+# Correrla (anota la IP que te dé con 'docker inspect')
+docker run --rm -it tleemcjr/metasploitable2 \\
+  /bin/sh -c "/usr/sbin/sshd -D"`)}
+    <div class="callout tip"><span class="tag">alternativa</span>Para un entorno más realista, también puedes descargar la imagen oficial de Metasploitable2 como VM e importarla en virt-manager. La versión Docker es más rápida para empezar; la VM completa es mejor para la semana 8 (proyecto final).</div>
+
+    <h2>paso 4 · objetivo web: dvwa</h2>
+    <p>DVWA (Damn Vulnerable Web Application) es tu objetivo para la semana 4 (pentesting web). Un comando y está lista:</p>
+    ${code(`docker run --rm -it -p 80:80 vulnerables/web-dvwa
+# Abre http://localhost en tu navegador
+# Usuario: admin / Contraseña: password
+# Entra a "DVWA Security" y ponlo en "Low" para empezar`)}
+
+    <h2>paso 5 · snapshots: tu botón de deshacer</h2>
+    <p>Un snapshot guarda el estado exacto de una VM. Si rompes algo o infectas una máquina de práctica, vuelves al snapshot y queda como nueva. <strong>Toma un snapshot limpio de cada VM apenas la configures.</strong></p>
+    ${code(`# En virt-manager: clic derecho en la VM > Snapshots > (+) crear
+# O por terminal:
+virsh snapshot-create-as --domain nombre_vm --name "limpio-inicial"
+
+# Para restaurar:
+virsh snapshot-revert --domain nombre_vm --snapshotname "limpio-inicial"`)}
+
+    <h2>paso 6 · red aislada (importante)</h2>
+    <p>Configura tus VMs en una red <code>host-only</code> o <code>isolated</code> dentro de virt-manager. Esto crea una red privada entre tu atacante y los objetivos, <strong>sin acceso a internet ni a tu red doméstica</strong>. Es la garantía de que tus prácticas no afecten nada externo — y también más realista, porque simula una red interna.</p>
+
+    <div class="callout legal"><span class="tag">regla del laboratorio</span>Si una herramienta pide una IP o un objetivo, esa IP <strong>siempre</strong> debe ser una de tu laboratorio (tus VMs) o de una plataforma de práctica autorizada (TryHackMe, HackTheBox). Nunca una IP real que no sea tuya. Cuando tengas dudas, pregúntame antes de ejecutar.</div>
+
+    <h2>tu bitácora</h2>
+    <p>Crea un archivo o cuaderno donde anotes cada sesión: qué comando usaste, qué resultado diste, qué aprendiste. En seguridad esto se llama "tomar notas como un pentester" y es la diferencia entre olvidar y dominar. Un simple <code>~/bitacora/semana-N.md</code> sirve perfecto.</p>
+  </div>`;
+}
+/* ============ VIEW: ARSENAL ============ */
+function viewArsenal(){
+  return `<div class="view" id="v-arsenal">
+    <div class="eyebrow">// arsenal/</div>
+    <h1>El <span class="accent">arsenal</span></h1>
+    <p class="lead">Todas las herramientas del curso, organizadas por categoría con su comando de instalación en CachyOS. Pasa el cursor sobre un bloque de código para copiarlo. Recuerda habilitar BlackArch para las que no estén en los repos oficiales.</p>
+
+    <div class="callout tip"><span class="tag">repositorio blackarch</span>Algunas herramientas viven en BlackArch (repo especializado de Arch para seguridad). Habilítalo una sola vez:
+    ${code(`curl -O https://blackarch.org/strap.sh
+chmod +x strap.sh
+sudo sh strap.sh
+sudo pacman -Syu`)}</div>
+
+    ${ARSENAL.map(c=>`
+      <div class="cat-head">${c.cat}</div>
+      ${c.tools.map(t=>`
+        <div class="tool">
+          <div class="tool-head"><span class="tool-name">${t.n}</span></div>
+          <div class="tool-desc">${t.d}</div>
+          ${code(t.i)}
+        </div>`).join('')}
+    `).join('')}
+  </div>`;
+}
+
+/* ============ VIEW: RECURSOS ============ */
+function viewRecursos(){
+  return `<div class="view" id="v-recursos">
+    <div class="eyebrow">// recursos.md</div>
+    <h1>Recursos y <span class="accent">próximos pasos</span></h1>
+    <p class="lead">Plataformas para practicar legalmente, comunidades, y hacia dónde seguir cuando termines las 8 semanas.</p>
+
+    <h2>plataformas de práctica (legales)</h2>
+    <div class="panel">
+      <h3>TryHackMe <span style="color:var(--green-dim);font-size:11px">— empieza aquí</span></h3>
+      <p>Salas guiadas paso a paso, ideales para principiantes. La ruta "Pre Security" y "Complete Beginner" acompañan exactamente tu plan. → <a href="https://tryhackme.com" target="_blank">tryhackme.com</a></p>
+      <h3>HackTheBox</h3>
+      <p>Más desafiante, menos guiado. Su sección "Starting Point" es buena cuando ya tengas las bases. → <a href="https://hackthebox.com" target="_blank">hackthebox.com</a></p>
+      <h3>OverTheWire</h3>
+      <p>Wargames por terminal. "Bandit" es obligatorio en tu semana 1 para dominar Linux. → <a href="https://overthewire.org/wargames/bandit" target="_blank">overthewire.org</a></p>
+      <h3>crackmes.one</h3>
+      <p>Binarios de práctica para ingeniería inversa (semana 8). → <a href="https://crackmes.one" target="_blank">crackmes.one</a></p>
+      <h3>CFReDS (NIST)</h3>
+      <p>Casos forenses estandarizados para la semana 7. → <a href="https://cfreds.nist.gov" target="_blank">cfreds.nist.gov</a></p>
+    </div>
+
+    <h2>referencia rápida</h2>
+    <div class="panel">
+      <p><strong>OWASP Top 10</strong> — las vulnerabilidades web más comunes, base de la semana 4. → <a href="https://owasp.org/www-project-top-ten/" target="_blank">owasp.org</a></p>
+      <p><strong>GTFOBins</strong> — técnicas de escalada de privilegios en Linux. → <a href="https://gtfobins.github.io" target="_blank">gtfobins.github.io</a></p>
+      <p><strong>Wiki de BlackArch</strong> — listado completo de herramientas disponibles. → <a href="https://blackarch.org/tools.html" target="_blank">blackarch.org/tools</a></p>
+    </div>
+
+    <h2>qué sigue después de las 8 semanas</h2>
+    <div class="panel">
+      <h3>Certificaciones para empezar</h3>
+      <p><strong>eJPT</strong> (eLearnSecurity Junior Penetration Tester): la más práctica y accesible para tu primer paso en Red Team. <strong>CompTIA Security+</strong>: más orientada a Blue Team y muy valorada para roles de soporte/seguridad como el tuyo.</p>
+      <h3>Mantén el ritmo</h3>
+      <p>Una vez termines, no pares: participa en CTFs (competencias de captura la bandera), sigue salas de HackTheBox, y considera especializarte en lo que más te enganchó — web, forense, redes o reversing.</p>
+      <h3>Tu rol OSS es una ventaja</h3>
+      <p>Muchos profesionales de seguridad vienen de soporte/redes. Ya entiendes infraestructura real, tickets y usuarios — eso te da contexto que a muchos les falta. La transición de OSS a seguridad es uno de los caminos más naturales que existen.</p>
+    </div>
+
+    <div class="callout"><span class="tag">mejora continua</span>Esta herramienta es la versión 1. A medida que avances, podemos agregar: un sistema de bitácora integrado, flashcards de comandos, retos personalizados, o seguimiento de tus máquinas resueltas en HackTheBox. Cuando quieras evolucionarla, solo dímelo.</div>
+  </div>`;
+}
+/* ============ VIEW: OSINT ============ */
+function viewOsint(){
+  return `<div class="view" id="v-osint">
+    <div class="eyebrow">// osint_recon.sh</div>
+    <h1>Métodos <span class="accent">OSINT</span></h1>
+    <p class="lead">OSINT (Open Source Intelligence) es el arte de recolectar información de fuentes públicas y abiertas: buscadores, registros de dominios, redes sociales, metadatos, filtraciones. Es la base del reconocimiento pasivo — recolectas sin tocar el objetivo, así que es la fase más sigilosa y, bien hecha, la más reveladora. Este módulo expande tu Semana 3, Día 1.</p>
+
+    <div class="callout legal"><span class="tag">ética — el límite del OSINT</span>Que la información sea pública no significa que todo uso sea legal o correcto. OSINT se usa para auditorías autorizadas, investigación y proteger tu propia huella digital — <strong>nunca</strong> para acosar, perfilar o vigilar a personas sin consentimiento. En Chile, recopilar y tratar datos personales tiene límites legales (Ley 19.628 y la nueva Ley 21.719 de protección de datos). Practica sobre ti mismo, sobre dominios propios o en retos diseñados para eso.</div>
+
+    <h2>el ciclo osint</h2>
+    <div class="panel">
+      <div class="routine">
+        <div class="slot"><div class="slot-time">01 · Definir</div><div class="slot-body"><div class="st">Qué buscas y por qué</div><div class="sd">Un objetivo claro evita perderte en horas de datos irrelevantes. ¿Dominio? ¿Persona? ¿Empresa? ¿Tu propia exposición?</div></div></div>
+        <div class="slot"><div class="slot-time">02 · Recolectar</div><div class="slot-body"><div class="st">Reunir datos de fuentes abiertas</div><div class="sd">Buscadores, dorks, registros, redes sociales, metadatos, filtraciones. Guarda todo de forma ordenada.</div></div></div>
+        <div class="slot"><div class="slot-time">03 · Procesar</div><div class="slot-body"><div class="st">Filtrar y correlacionar</div><div class="sd">Conecta los puntos: un correo lleva a un usuario, un usuario a un perfil, un perfil a una ubicación.</div></div></div>
+        <div class="slot"><div class="slot-time">04 · Analizar</div><div class="slot-body"><div class="st">Convertir datos en inteligencia</div><div class="sd">¿Qué te dice todo esto? Identifica la superficie de ataque o la huella expuesta.</div></div></div>
+        <div class="slot"><div class="slot-time">05 · Documentar</div><div class="slot-body"><div class="st">Informe reproducible</div><div class="sd">Registra fuentes y hallazgos. Un buen informe OSINT se puede verificar paso a paso.</div></div></div>
+      </div>
+    </div>
+
+    <div class="cat-head">técnica 01 · google dorking</div>
+    <p>El "dorking" usa operadores avanzados de búsqueda para encontrar información que los buscadores indexaron pero que no es obvia: archivos expuestos, paneles de login, documentos con metadatos. Es la técnica OSINT más accesible y no requiere instalar nada.</p>
+    ${code(`site:ejemplo.com            # solo resultados de ese dominio
+filetype:pdf site:ejemplo.com  # documentos PDF en ese dominio
+intitle:"index of"          # listados de directorios abiertos
+inurl:admin                 # URLs que contengan "admin"
+intext:"contraseña"         # páginas que mencionen esa palabra
+"frase exacta"              # busca la frase literal
+ejemplo.com -www            # excluye un término con el guion
+cache:ejemplo.com           # versión cacheada por Google`)}
+    <div class="callout tip"><span class="tag">recurso</span>La <a href="https://www.exploit-db.com/google-hacking-database" target="_blank">Google Hacking Database (GHDB)</a> tiene miles de dorks ya armados por categoría. Úsala solo sobre dominios que tengas autorización de auditar.</div>
+
+    <div class="cat-head">técnica 02 · dominios e infraestructura</div>
+    <p>Mapear todo lo que rodea a un dominio: quién lo registró, qué subdominios tiene, qué servicios expone a internet. Combina herramientas de terminal con servicios web.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">crt.sh</span><span class="tool-cat">web · sin instalación</span></div><div class="tool-desc">Busca certificados SSL públicos de un dominio. Revela subdominios que de otra forma no verías. → <a href="https://crt.sh" target="_blank">crt.sh</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Shodan</span><span class="tool-cat">web + cli</span></div><div class="tool-desc">El "buscador de dispositivos conectados a internet": servidores, cámaras, routers, IoT. Muestra puertos y servicios expuestos sin escanear tú mismo. → <a href="https://shodan.io" target="_blank">shodan.io</a></div>${code(`pipx install shodan
+shodan init TU_API_KEY
+shodan host 1.2.3.4`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Censys</span><span class="tool-cat">web</span></div><div class="tool-desc">Similar a Shodan: inventario de hosts y certificados expuestos en internet. Buena alternativa complementaria. → <a href="https://search.censys.io" target="_blank">search.censys.io</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">amass</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Enumeración de subdominios desde decenas de fuentes pasivas (ya está en tu Arsenal).</div>${code(`amass enum -passive -d ejemplo.com`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">theHarvester</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Recolecta correos, subdominios, hosts y nombres asociados a un dominio desde fuentes públicas. Un clásico del OSINT.</div>${code(`yay -S theharvester
+# o:  pipx install theHarvester
+theHarvester -d ejemplo.com -b all`)}</div>
+
+    <div class="cat-head">técnica 03 · correos y filtraciones</div>
+    <p>Descubrir qué correos están asociados a una organización y si aparecieron en filtraciones de datos. Clave para entender el riesgo de credenciales comprometidas.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Have I Been Pwned</span><span class="tool-cat">web</span></div><div class="tool-desc">Verifica si un correo apareció en filtraciones conocidas. Empieza revisando los tuyos. → <a href="https://haveibeenpwned.com" target="_blank">haveibeenpwned.com</a></div></div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Hunter.io</span><span class="tool-cat">web</span></div><div class="tool-desc">Encuentra el formato de correos de una empresa (nombre.apellido@) y direcciones públicas asociadas. → <a href="https://hunter.io" target="_blank">hunter.io</a></div></div>
+
+    <div class="cat-head">técnica 04 · identidades y nombres de usuario</div>
+    <p>Una persona suele reutilizar el mismo nombre de usuario en muchas plataformas. Rastrearlo conecta perfiles dispersos en una sola huella.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Sherlock</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Busca un nombre de usuario en cientos de redes sociales y sitios de una sola vez.</div>${code(`yay -S sherlock
+# o:  pipx install sherlock-project
+sherlock nombre_de_usuario`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">WhatsMyName</span><span class="tool-cat">web</span></div><div class="tool-desc">Misma idea que Sherlock pero en navegador, sin instalar nada. → <a href="https://whatsmyname.app" target="_blank">whatsmyname.app</a></div></div>
+
+    <div class="cat-head">técnica 05 · metadatos</div>
+    <p>Las fotos y documentos guardan metadatos ocultos: cámara, fecha, software, y a veces coordenadas GPS. Una imagen subida a internet puede revelar dónde y cuándo se tomó.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">ExifTool</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Lee (y limpia) los metadatos de imágenes y documentos. Úsalo también para proteger tu propia privacidad antes de subir fotos.</div>${code(`sudo pacman -S perl-image-exiftool
+exiftool foto.jpg              # ver todos los metadatos
+exiftool -gps:all foto.jpg     # solo coordenadas GPS
+exiftool -all= foto.jpg        # borrar todos los metadatos`)}</div>
+
+    <div class="cat-head">técnica 06 · frameworks todo-en-uno</div>
+    <p>Cuando ya dominas las herramientas sueltas, estos frameworks automatizan y correlacionan todo el proceso en una sola interfaz.</p>
+    <div class="tool"><div class="tool-head"><span class="tool-name">SpiderFoot</span><span class="tool-cat">terminal + web</span></div><div class="tool-desc">Automatiza más de 200 módulos OSINT desde un dominio, IP, correo o nombre. Interfaz web propia. Ideal para empezar con frameworks.</div>${code(`yay -S spiderfoot
+spiderfoot -l 127.0.0.1:5001
+# abre http://127.0.0.1:5001`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Recon-ng</span><span class="tool-cat">terminal</span></div><div class="tool-desc">Framework modular estilo Metasploit pero para reconocimiento. Organiza resultados en una base de datos.</div>${code(`yay -S recon-ng
+recon-ng`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">Maltego</span><span class="tool-cat">gui</span></div><div class="tool-desc">Visualiza relaciones (persona → correo → dominio → IP) en gráficos interactivos. La versión Community es gratuita. → <a href="https://maltego.com" target="_blank">maltego.com</a></div>${code(`yay -S maltego`)}</div>
+    <div class="tool"><div class="tool-head"><span class="tool-name">OSINT Framework</span><span class="tool-cat">web · directorio</span></div><div class="tool-desc">No es una herramienta sino un mapa enorme de recursos OSINT organizados por tipo de dato. Tu punto de partida cuando no sepas qué usar. → <a href="https://osintframework.com" target="_blank">osintframework.com</a></div></div>
+
+    <h2>cómo practicar (legalmente)</h2>
+    <div class="panel">
+      <p><strong>Empieza por ti mismo.</strong> Búscate en Have I Been Pwned, corre Sherlock con tus propios usuarios, revisa qué metadatos tienen tus fotos. Es la forma más reveladora — y más segura — de entender el poder del OSINT, y de paso reduces tu propia huella.</p>
+      <p><strong>Usa dominios propios o de práctica.</strong> Aplica theHarvester y amass sobre un dominio tuyo o sobre los que se permiten en retos.</p>
+      <p><strong>Retos OSINT.</strong> TryHackMe tiene salas dedicadas (busca "OSINT"), y existen CTFs de OSINT como los de <a href="https://www.tracelabs.org" target="_blank">TraceLabs</a>, que además se usan para causas reales (personas desaparecidas) de forma ética y supervisada.</p>
+    </div>
+
+    <div class="callout"><span class="tag">conexión con el plan</span>Este módulo potencia la <strong>Semana 3 (Reconocimiento)</strong>. El día que llegues a recon pasivo, vuelve aquí y practica al menos dos técnicas distintas sobre un objetivo de tu laboratorio.</div>
+  </div>`;
+}
+
+/* ============ APP CONTROLLER ============ */
+const VIEWS = {dashboard:viewDashboard, plan:viewPlan, lab:viewLab, osint:viewOsint, arsenal:viewArsenal, recursos:viewRecursos};
+const PROMPTS = {dashboard:'cat plan.md',plan:'./plan_estudio.sh',lab:'vim laboratorio.conf',osint:'./osint_recon.sh --target',arsenal:'ls arsenal/',recursos:'cat recursos.md'};
+
+function render(){
+  document.getElementById('views').innerHTML = Object.keys(VIEWS).map(k=>VIEWS[k]()).join('');
+  restoreChecks();
+  updateProgress();
+}
+function go(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+view).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+  document.getElementById('promptTail').textContent = PROMPTS[view];
+  window.scrollTo(0,0);
+  if(window.innerWidth<=820) closeMenu();
+}
+document.getElementById('nav').addEventListener('click',e=>{
+  const btn=e.target.closest('button'); if(btn) go(btn.dataset.view);
+});
+
+/* ----- weeks ----- */
+function toggleWeek(n){ document.getElementById('week-'+n).classList.toggle('open'); }
+function openWeek(n){
+  const w=document.getElementById('week-'+n);
+  if(w && !w.classList.contains('open')) w.classList.add('open');
+  w.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ----- progress ----- */
+function onCheck(wn,di){
+  const chk=document.getElementById('chk-'+wn+'-'+di);
+  store('chk-'+wn+'-'+di, chk.checked?'1':'0');
+  document.getElementById('day-'+wn+'-'+di).classList.toggle('checked',chk.checked);
+  updateProgress();
+}
+function restoreChecks(){
+  WEEKS.forEach(w=>w.days.forEach((d,i)=>{
+    if(recall('chk-'+w.n+'-'+i)==='1'){
+      const chk=document.getElementById('chk-'+w.n+'-'+i);
+      if(chk){chk.checked=true;document.getElementById('day-'+w.n+'-'+i).classList.add('checked');}
+    }
+  }));
+}
+function updateProgress(){
+  let done=0,total=0,curWeek=1,firstIncomplete=true;
+  WEEKS.forEach(w=>{
+    let wdone=0;
+    w.days.forEach((d,i)=>{ total++; if(recall('chk-'+w.n+'-'+i)==='1'){done++;wdone++;} });
+    const wp=document.getElementById('wprog-'+w.n);
+    if(wp) wp.textContent=wdone+'/'+w.days.length;
+    const wEl=document.getElementById('week-'+w.n);
+    if(wEl) wEl.classList.toggle('done',wdone===w.days.length);
+    if(wdone<w.days.length && firstIncomplete){curWeek=w.n;firstIncomplete=false;}
+  });
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=pct+'%';
+  const dp=document.getElementById('dashPct'); if(dp) dp.innerHTML=pct+'<small>%</small>';
+  const dd=document.getElementById('dashDone'); if(dd) dd.innerHTML=done+'<small>/'+total+'</small>';
+  const dw=document.getElementById('dashWeek'); if(dw) dw.innerHTML=curWeek+'<small>/8</small>';
+}
+function resetProgress(){
+  if(!confirm('¿Reiniciar todo tu progreso? Esto desmarca todos los días completados.')) return;
+  WEEKS.forEach(w=>w.days.forEach((d,i)=>store('chk-'+w.n+'-'+i,'0')));
+  document.querySelectorAll('.day input').forEach(c=>c.checked=false);
+  document.querySelectorAll('.day').forEach(d=>d.classList.remove('checked'));
+  updateProgress();
+}
+
+/* ----- mobile menu ----- */
+function toggleMenu(){
+  document.getElementById('sidebar').classList.toggle('show');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeMenu(){
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ----- boot sequence ----- */
+const BOOT=[
+ '<span class="dim">[</span><span class="ok">  OK  </span><span class="dim">]</span> Iniciando secOps study environment',
+ '<span class="dim">[</span><span class="ok">  OK  </span><span class="dim">]</span> Cargando plan_estudio.sh <span class="dim">(8 semanas)</span>',
+ '<span class="dim">[</span><span class="ok">  OK  </span><span class="dim">]</span> Montando arsenal <span class="dim">(22 herramientas)</span>',
+ '<span class="dim">[</span><span class="ok">  OK  </span><span class="dim">]</span> Verificando laboratorio',
+ '<span class="dim">[</span><span class="ok">  OK  </span><span class="dim">]</span> Restaurando progreso de daniel',
+ '<span class="ok">&gt;</span> listo. bienvenido de vuelta_'
+];
+function runBoot(){
+  const inner=document.getElementById('bootInner');
+  let i=0;
+  const iv=setInterval(()=>{
+    const line=document.createElement('div');
+    line.className='boot-line show';
+    line.innerHTML=BOOT[i];
+    inner.appendChild(line);
+    i++;
+    if(i>=BOOT.length){
+      clearInterval(iv);
+      setTimeout(()=>{document.getElementById('boot').classList.add('gone');},650);
+    }
+  },220);
+}
+
+/* ----- init ----- */
+render();
+if(recall('booted')==='1'){ document.getElementById('boot').classList.add('gone'); }
+else { runBoot(); store('booted','1'); }
+</script>
+</body>
+</html>
