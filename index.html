@@ -155,6 +155,8 @@ pre:hover .copy{opacity:1}
 .day-desc{font-size:12.5px;color:var(--txt-dim)}
 .day-tags{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
 .pill{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid var(--line-2);color:var(--txt-dim)}
+.pill.clickable{cursor:pointer;transition:.15s}
+.pill.clickable:hover{background:var(--panel-2);color:#fff;border-color:var(--green-dim);transform:translateY(-1px)}
 .pill.read{color:var(--cyan);border-color:rgba(44,212,230,.3)}
 .pill.lab{color:var(--green);border-color:var(--green-dim)}
 .pill.ctf{color:var(--amber);border-color:rgba(245,182,66,.3)}
@@ -422,6 +424,13 @@ function cp(btn){
   navigator.clipboard.writeText(t).then(()=>{btn.textContent='copiado ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='copy';btn.classList.remove('done')},1400)});
 }
 const PILL = {read:'leer',lab:'lab',ctf:'reto'};
+function askAboutDay(wn,di){
+  const w = WEEKS.find(x=>x.n===wn);
+  const d = w.days[di];
+  const msg = `Estoy en la Semana ${wn} (${w.t}), ${d.l}: "${d.ti}". Contexto del día: ${d.d}. Por favor explícame la teoría de este tema y luego dame una guía práctica paso a paso para hacerlo en mi laboratorio (CachyOS).`;
+  if (typeof sendPrompt === 'function') sendPrompt(msg);
+  else alert('Esta función solo funciona dentro del chat de Claude. Abre esta herramienta desde una conversación activa.');
+}
 /* ============ VIEW: DASHBOARD ============ */
 function viewDashboard(){
   const total = WEEKS.reduce((a,w)=>a+w.days.length,0);
@@ -470,7 +479,7 @@ function viewPlan(){
   return `<div class="view" id="v-plan">
     <div class="eyebrow">// plan_estudio.sh</div>
     <h1>Plan de <span class="accent">8 semanas</span></h1>
-    <p class="lead">Cada día tiene una sesión de 2 horas. Marca el check al terminar — tu progreso se guarda solo. Haz clic en cada semana para desplegar sus días.</p>
+    <p class="lead">Cada día tiene una sesión de 2 horas. Marca el check al terminar — tu progreso se guarda solo. Haz clic en cada semana para desplegar sus días, y en cualquier etiqueta (<span class="pill read" style="cursor:default">leer</span>/<span class="pill lab" style="cursor:default">lab</span>/<span class="pill ctf" style="cursor:default">reto</span>) para que te explique ese tema en el chat.</p>
     <div style="margin-bottom:18px"><button class="reset-btn" onclick="resetProgress()">reiniciar progreso</button></div>
     <div id="weeksWrap">
       ${WEEKS.map(w=>`
@@ -489,7 +498,7 @@ function viewPlan(){
                   <div class="day-label">${d.l}</div>
                   <div class="day-title">${d.ti}</div>
                   <div class="day-desc">${d.d}</div>
-                  <div class="day-tags">${d.tags.map(t=>`<span class="pill ${t}">${PILL[t]}</span>`).join('')}</div>
+                  <div class="day-tags">${d.tags.map(t=>`<span class="pill ${t} clickable" onclick="askAboutDay(${w.n},${i})" title="Pídele a Claude que te explique este tema">${PILL[t]}</span>`).join('')}</div>
                 </div>
               </div>`).join('')}
           </div>
